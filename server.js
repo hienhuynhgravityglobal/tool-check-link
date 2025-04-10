@@ -174,116 +174,207 @@ app.get("/api/check-page-for-hash", async (req, res) => {
         hasHashLinks: false,
         hashLinks: [],
         headerHashLinks: [],
+        footerHashLinks: []
       });
     }
-
-    const { JSDOM } = require("jsdom");
-    const dom = new JSDOM(response.data);
+    
+    // Extract links with href="#" or href="/#"
+    const htmlContent = response.data;
+    const { JSDOM } = require('jsdom');
+    const dom = new JSDOM(htmlContent);
     const document = dom.window.document;
-
-    const allLinks = document.getElementsByTagName("a");
-    const hashLinks = [];
+    
+    // Identify header elements to check separately
+    const headerElements = [
+      ...document.getElementsByTagName('header'),
+      ...document.querySelectorAll('nav'),
+      ...document.querySelectorAll('.header'),
+      ...document.querySelectorAll('#header'),
+      ...document.querySelectorAll('.navigation'),
+      ...document.querySelectorAll('#navigation'),
+      ...document.querySelectorAll('.main-nav'),
+      ...document.querySelectorAll('#main-nav'),
+      ...document.querySelectorAll('.navbar'),
+      ...document.querySelectorAll('#navbar')
+    ];
+    
+    // Identify footer elements to check separately
+    const footerElements = [
+      ...document.getElementsByTagName('footer'),
+      ...document.querySelectorAll('.footer'),
+      ...document.querySelectorAll('#footer'),
+      ...document.querySelectorAll('.site-footer'),
+      ...document.querySelectorAll('#site-footer'),
+      ...document.querySelectorAll('.bottom-footer'),
+      ...document.querySelectorAll('.page-footer'),
+      ...document.querySelectorAll('.copyright-footer'),
+      ...document.querySelectorAll('[role="contentinfo"]')
+    ];
+    
     const headerHashLinks = [];
-    const headerElements = extractHeaderElements(document);
-    const newHeadersFound = [];
-    let skippedHeaders = 0;
-
-    for (let i = 0; i < allLinks.length; i++) {
-      const link = allLinks[i];
-      const href = link.getAttribute("href");
-
-      // Use the new isHashLink function instead of direct comparison
-      if (isHashLink(href)) {
-        let context = "";
-        const headerInfo = isElementInHeaderOrNav(
-          link,
-          document,
-          headerElements
-        );
-
-        if (headerInfo) {
-          const { headerElement, selector } = headerInfo;
-          const headerFingerprint = createHeaderFingerprint(headerElement);
-
-          // Tạo một khóa duy nhất cho liên kết dựa trên nội dung
-          const linkText = getFormattedLinkText(link);
-          const linkKey = `${linkText}-${href}-${selector}`;
-
-          // Kiểm tra xem header đã được xử lý chưa
-          if (processedHeaders.has(headerFingerprint)) {
-            const existingLinks = processedHeaders.get(headerFingerprint);
-            if (existingLinks.includes(linkKey)) {
-              skippedHeaders++;
-              continue; // Bỏ qua nếu liên kết đã được xử lý
-            } else {
-              existingLinks.push(linkKey);
-              processedHeaders.set(headerFingerprint, existingLinks);
-            }
-          } else {
-            processedHeaders.set(headerFingerprint, [linkKey]);
-            newHeadersFound.push(headerFingerprint);
-          }
-
-          context = `Found in navigation/header element: ${selector}`;
+    const footerHashLinks = [];
+    const hashLinks = [];
+    
+    // Function to check if an element is inside a header
+    const isInsideHeader = (element) => {
+      let current = element;
+      while (current) {
+        if (headerElements.includes(current)) {
+          return true;
+        }
+        current = current.parentNode;
+      }
+      return false;
+    };
+    
+    // Function to check if an element is inside a footer
+    const isInsideFooter = (element) => {
+      let current = element;
+      while (current) {
+        if (footerElements.includes(current)) {
+          return true;
+        }
+        current = current.parentNode;
+      }
+      return false;
+    };
+    
+    // Extract context from a link
+    const extractContext = (link) => {
+      let context = '';
+      
+      // Try to get a parent element with an ID or class for context
+      let contextElement = link.parentNode;
+      let depth = 0;
+      const maxDepth = 3; // Don't go too far up the tree
+      
+      while (contextElement && depth < maxDepth) {
+        if (contextElement.id || 
+            (contextElement.className && contextElement.className.trim())) {
+          context = contextElement.id 
+            ? `Inside element with id="${contextElement.id}"` 
+            : `Inside element with class="${contextElement.className.trim()}"`;
+          break;
+        }
+        contextElement = contextElement.parentNode;
+        depth++;
+      }
+      
+      if (!context) {
+        // If no good parent context found, get surrounding text
+        const parentText = link.parentNode?.textContent?.trim();
+        if (parentText && parentText.length > link.textContent.trim().length) {
+          const maxLength = 100;
+          context = `Near text: "${parentText.substring(0, maxLength)}${parentText.length > maxLength ? '...' : ''}"`;
+        }
+      }
+      
+      return context || 'No context available';
+    };
+    
+    // Function to format link text to handle multiple HTML tags
+    function formatLinkText(link) {
+      // If there are no children elements, just return the text
+      if (link.children.length === 0) {
+        return link.textContent.trim() || '[No text]';
+      }
+      
+      // Link has child elements - need to process them
+      const parts = [];
+      
+      // Get the text directly in the link (not in child elements)
+      const directText = Array.from(link.childNodes)
+        .filter(node => node.nodeType === 3) // Text nodes only
+        .map(node => node.textContent.trim())
+        .filter(text => text.length > 0)
+        .join(' ');
+      
+      if (directText) {
+        parts.push(directText);
+      }
+      
+      // Get text from each child element
+      Array.from(link.children).forEach(child => {
+        const childText = child.textContent.trim();
+        if (childText) {
+          parts.push(childText);
+        }
+      });
+      
+      // Join with pipe symbols
+      return parts.join(' | ') || link.textContent.trim() || '[No text]';
+    }
+    
+    // First, check all links in header elements
+    headerElements.forEach(headerElement => {
+      const links = headerElement.getElementsByTagName('a');
+      for (let i = 0; i < links.length; i++) {
+        const link = links[i];
+        const href = link.getAttribute('href');
+        
+        if (href === '#' || href === '/#') {
+          const context = extractContext(link);
+          
           headerHashLinks.push({
-            text: linkText,
-            href: href, // Use the actual href value
+            text: formatLinkText(link),
+            href: href,
             context: context,
-            headerType: selector,
-          });
-        } else {
-          // Xử lý liên kết thông thường (không trong header)
-          let contextElement = link.parentNode;
-          let depth = 0;
-          const maxDepth = 3;
-
-          while (contextElement && depth < maxDepth) {
-            if (
-              contextElement.id ||
-              (contextElement.className && contextElement.className.trim())
-            ) {
-              context = contextElement.id
-                ? `Inside element with id="${contextElement.id}"`
-                : `Inside element with class="${contextElement.className.trim()}"`;
-              break;
-            }
-            contextElement = contextElement.parentNode;
-            depth++;
-          }
-
-          if (!context) {
-            const parentText = link.parentNode?.textContent?.trim();
-            if (
-              parentText &&
-              parentText.length > link.textContent.trim().length
-            ) {
-              const maxLength = 100;
-              context = `Near text: "${parentText.substring(0, maxLength)}${
-                parentText.length > maxLength ? "..." : ""
-              }"`;
-            }
-          }
-
-          hashLinks.push({
-            text: getFormattedLinkText(link),
-            href: href, // Use the actual href value
-            context: context || "No context available",
+            headerType: headerElement.tagName.toLowerCase() + 
+                       (headerElement.id ? ` (id=${headerElement.id})` : '') + 
+                       (headerElement.className ? ` (class=${headerElement.className})` : '')
           });
         }
+      }
+    });
+    
+    // Second, check all links in footer elements
+    footerElements.forEach(footerElement => {
+      const links = footerElement.getElementsByTagName('a');
+      for (let i = 0; i < links.length; i++) {
+        const link = links[i];
+        const href = link.getAttribute('href');
+        
+        if (href === '#' || href === '/#') {
+          const context = extractContext(link);
+          
+          footerHashLinks.push({
+            text: formatLinkText(link),
+            href: href,
+            context: context,
+            footerType: footerElement.tagName.toLowerCase() + 
+                       (footerElement.id ? ` (id=${footerElement.id})` : '') + 
+                       (footerElement.className ? ` (class=${footerElement.className})` : '')
+          });
+        }
+      }
+    });
+    
+    // Then check all other links that are not in headers or footers
+    const allLinks = document.getElementsByTagName('a');
+    for (let i = 0; i < allLinks.length; i++) {
+      const link = allLinks[i];
+      const href = link.getAttribute('href');
+      
+      if ((href === '#' || href === '/#') && !isInsideHeader(link) && !isInsideFooter(link)) {
+        const context = extractContext(link);
+        
+        hashLinks.push({
+          text: formatLinkText(link),
+          href: href,
+          context: context
+        });
       }
     }
 
     res.json({
       success: true,
       url: url,
-      hasHashLinks: hashLinks.length > 0 || headerHashLinks.length > 0,
+      hasHashLinks: hashLinks.length > 0,
       hashLinks: hashLinks,
+      hasHeaderHashLinks: headerHashLinks.length > 0,
       headerHashLinks: headerHashLinks,
-      headerStats: {
-        newHeadersFound: newHeadersFound.length,
-        skippedLinks: skippedHeaders,
-        totalHeadersProcessed: processedHeaders.size,
-      },
+      hasFooterHashLinks: footerHashLinks.length > 0,
+      footerHashLinks: footerHashLinks
     });
   } catch (error) {
     console.error(`Error checking page ${url} for hash links:`, error.message);
@@ -294,6 +385,7 @@ app.get("/api/check-page-for-hash", async (req, res) => {
       hasHashLinks: false,
       hashLinks: [],
       headerHashLinks: [],
+      footerHashLinks: []
     });
   }
 });
