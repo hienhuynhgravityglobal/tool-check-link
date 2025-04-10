@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Link # and /# Character Checker</title>
+    <!-- External libraries for export functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,7 +21,7 @@
         .form-container {
             margin-bottom: 20px;
             display: flex;
-            max-width: 600px;
+            max-width: 900px;
             margin-left: auto;
             margin-right: auto;
             border-radius: 5px;
@@ -294,6 +298,149 @@
             margin: 10px 0;
             border-left: 4px solid #ffc107;
         }
+        .toggle-container {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            max-width: 870px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 15px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #772fc9;
+        }
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px #772fc9;
+        }
+        input:checked + .toggle-slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+        .toggle-label {
+            font-size: 16px;
+        }
+        .broken-links-container {
+            background-color: #ffebee;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+            display: none;
+        }
+        .broken-page-item {
+            background-color: #fff;
+            position: relative;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            padding-right: 135px;
+            border-bottom: 1px solid #ffcdd2;
+        }
+        .broken-link-details {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff8f8;
+            border-radius: 5px;
+        }
+        .broken-link-status {
+            display: inline-block;
+            padding: 4px 8px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            background-color: #f44336;
+            border-radius: 3px;
+        }
+        .broken-link-source {
+            margin-top: 8px;
+            font-style: italic;
+            color: #777;
+        }
+        .export-container {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+            border-left: 4px solid #4CAF50;
+            max-width: 870px;
+            margin-left: auto;
+            margin-right: auto;
+            display: none;
+        }
+        .export-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .export-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.3s;
+        }
+        .export-btn:hover {
+            opacity: 0.9;
+        }
+        .excel-btn {
+            background-color: #217346;
+        }
+        .csv-btn {
+            background-color: #ff9800;
+        }
+        .export-btn img {
+            width: 20px;
+            height: 20px;
+        }
     </style>
 </head>
 <body>
@@ -303,6 +450,15 @@
         <input type="text" id="urlInput" placeholder="Enter sitemap URL (e.g., https://example.com/sitemap_index.xml)" required>
         <button type="submit" id="checkButton">Process Now</button>
     </div>
+
+    <!-- <div class="toggle-container">
+        <label class="toggle-switch">
+            <input type="checkbox" id="checkBrokenLinks">
+            <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Allow to check broken links (this will make scanning slower)</span>
+    </div> -->
+
     <div id="loading" class="loading">Processing, please wait... This may take a while for large sitemaps.</div>
     
     <div id="progressContainer" class="progress-container" style="display: none;">
@@ -312,6 +468,19 @@
     <div class="results">
         <div id="summary"></div>
         <div id="results"></div>
+    </div>
+    
+    <div class="export-container" id="exportContainer">
+        <h3>Export Results</h3>
+        <p>Download your hash links data in the following formats:</p>
+        <div class="export-buttons">
+            <button class="export-btn excel-btn" id="excelExportBtn">
+                <i class="fa-solid fa-file-excel"></i> Excel
+            </button>
+            <button class="export-btn csv-btn" id="csvExportBtn">
+                <i class="fa-solid fa-file-csv"></i> CSV
+            </button>
+        </div>
     </div>
 
     <script>
@@ -424,6 +593,34 @@
                     footerLinksContainer.className = 'footer-links-container';
                     footerLinksContainer.innerHTML = '<h3>Hash Links in Footers (Across All Pages)</h3>';
                     resultsDiv.appendChild(footerLinksContainer);
+                    
+                    // Create container for broken links
+                    const brokenLinksContainer = document.createElement('div');
+                    brokenLinksContainer.className = 'broken-links-container';
+                    brokenLinksContainer.innerHTML = '<h3>Broken Links Found</h3>';
+                    resultsDiv.appendChild(brokenLinksContainer);
+                    
+                    /* Example of how to add a broken link item:
+                    const brokenPageItem = document.createElement('div');
+                    brokenPageItem.className = 'broken-page-item';
+                    brokenPageItem.innerHTML = `
+                        <a href="https://example.com/broken-page" target="_blank">https://example.com/broken-page</a>
+                        <span class="broken-link-status">404</span>
+                        <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Details</button>
+                        <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                            <div class="broken-link-details">
+                                <strong>Found on:</strong> <a href="https://example.com/source-page" target="_blank">https://example.com/source-page</a>
+                                <div class="broken-link-source">
+                                    <strong>Link Text:</strong> Example Broken Link
+                                </div>
+                                <div class="broken-link-source">
+                                    <strong>Last Checked:</strong> 2023-05-15 14:30:25
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    brokenLinksContainer.appendChild(brokenPageItem);
+                    */
                     
                     // Process pages in batches to avoid overwhelming the server
                     const batchSize = 5;
@@ -566,10 +763,16 @@
                     resultsDiv.appendChild(headerLinksContainer);
                     
                     // Create container for footer links
-                    const footerLinksContainer = document.createElement('div');
-                    footerLinksContainer.className = 'footer-links-container';
-                    footerLinksContainer.innerHTML = '<h3>Hash Links in Footers (Across All Pages)</h3>';
-                    resultsDiv.appendChild(footerLinksContainer);
+                    const footerLinksContainerRegular = document.createElement('div');
+                    footerLinksContainerRegular.className = 'footer-links-container';
+                    footerLinksContainerRegular.innerHTML = '<h3>Hash Links in Footers (Across All Pages)</h3>';
+                    resultsDiv.appendChild(footerLinksContainerRegular);
+                    
+                    // Create container for broken links
+                    const brokenLinksContainerRegular = document.createElement('div');
+                    brokenLinksContainerRegular.className = 'broken-links-container';
+                    brokenLinksContainerRegular.innerHTML = '<h3>Broken Links Found</h3>';
+                    resultsDiv.appendChild(brokenLinksContainerRegular);
                     
                     // Process pages in batches
                     const batchSize = 5;
@@ -632,7 +835,7 @@
                                 });
                                 
                                 // Update footer links display
-                                updateFooterLinksDisplay(footerLinksContainer);
+                                updateFooterLinksDisplay(footerLinksContainerRegular);
                             }
                             
                             // Process regular hash links
@@ -986,6 +1189,9 @@
                     <p><strong>Unique link texts found in footers:</strong> ${footerHashLinks.size}</p>
                     <p>Scroll down to see the results.</p>
                 `;
+                
+                // Show export options when results are found
+                document.getElementById('exportContainer').style.display = 'block';
             } else {
                 finalSummary.innerHTML = `
                     <p><strong>Total pages checked:</strong> ${pagesChecked}</p>
@@ -1016,6 +1222,165 @@
         window.toggleHashLinks = toggleHashLinks;
         window.updateHeaderLinksDisplay = updateHeaderLinksDisplay;
         window.updateFooterLinksDisplay = updateFooterLinksDisplay;
+        
+        // Export Functions
+        
+        // Function to prepare data for export
+        function prepareExportData() {
+            const data = [];
+            
+            // Add header for regular hash links
+            if (document.querySelector('.pages-container') && document.querySelectorAll('.page-item.has-hash').length > 0) {
+                data.push({
+                    section: "Hash Links in Regular Content",
+                    links: []
+                });
+                
+                // Get data from regular hash links
+                document.querySelectorAll('.page-item.has-hash').forEach(item => {
+                    const url = item.querySelector('a')?.href || '';
+                    const hashLinksItems = item.querySelectorAll('.result-item.has-hash');
+                    
+                    hashLinksItems.forEach(hashLink => {
+                        const textElement = hashLink.innerHTML.match(/<strong>Link Text:<\/strong>(.*?)<br>/);
+                        const text = textElement ? cleanHtmlText(textElement[1]) : '';
+                        
+                        const hrefElement = hashLink.innerHTML.match(/<strong>HREF:<\/strong>(.*?)<br>/);
+                        const href = hrefElement ? hrefElement[1].trim() : '';
+                        
+                        data[data.length - 1].links.push({
+                            text: text,
+                            href: href,
+                            url: url
+                        });
+                    });
+                });
+            }
+            
+            // Add header links
+            if (headerHashLinks.size > 0) {
+                data.push({
+                    section: "Hash Links in Headers (Across All Pages)",
+                    links: []
+                });
+                
+                headerHashLinks.forEach((link, key) => {
+                    data[data.length - 1].links.push({
+                        text: link.text,
+                        href: link.href,
+                        url: link.urls[0] || '' // Use the first URL as example
+                    });
+                });
+            }
+            
+            // Add footer links
+            if (footerHashLinks.size > 0) {
+                data.push({
+                    section: "Hash Links in Footers (Across All Pages)",
+                    links: []
+                });
+                
+                footerHashLinks.forEach((link, key) => {
+                    data[data.length - 1].links.push({
+                        text: link.text,
+                        href: link.href,
+                        url: link.urls[0] || '' // Use the first URL as example
+                    });
+                });
+            }
+            
+            return data;
+        }
+        
+        // Helper function to clean HTML text
+        function cleanHtmlText(html) {
+            if (!html) return '';
+            
+            // Create a temporary div to extract text
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            
+            // Extract text content
+            let text = temp.textContent || temp.innerText || '';
+            
+            // Replace multiple spaces with a single space
+            text = text.replace(/\s+/g, ' ').trim();
+            
+            return text;
+        }
+        
+        // Function to export to Excel
+        document.getElementById('excelExportBtn').addEventListener('click', function() {
+            const data = prepareExportData();
+            if (data.length === 0) {
+                alert('No data to export.');
+                return;
+            }
+            
+            // Create workbook
+            const XLSX = window.XLSX;
+            const wb = XLSX.utils.book_new();
+            
+            // Process each section
+            data.forEach(section => {
+                // Convert the data to a worksheet
+                const ws_data = [
+                    ['Text', 'HREF', 'URL']
+                ];
+                
+                section.links.forEach(link => {
+                    ws_data.push([link.text, link.href, link.url]);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                
+                // Add the worksheet to the workbook
+                XLSX.utils.book_append_sheet(wb, ws, section.section.substring(0, 30));
+            });
+            
+            // Generate Excel file
+            XLSX.writeFile(wb, 'hash_links_report.xlsx');
+        });
+        
+        // Function to export to CSV
+        document.getElementById('csvExportBtn').addEventListener('click', function() {
+            const data = prepareExportData();
+            if (data.length === 0) {
+                alert('No data to export.');
+                return;
+            }
+            
+            let csvContent = '';
+            
+            // Process each section
+            data.forEach(section => {
+                // Add section header as a comment
+                csvContent += '# ' + section.section + '\r\n';
+                csvContent += 'Text,HREF,URL\r\n';
+                
+                section.links.forEach(link => {
+                    // Escape fields properly for CSV
+                    const escapedText = '"' + (link.text || '').replace(/"/g, '""') + '"';
+                    const escapedHref = '"' + (link.href || '').replace(/"/g, '""') + '"';
+                    const escapedUrl = '"' + (link.url || '').replace(/"/g, '""') + '"';
+                    
+                    csvContent += escapedText + ',' + escapedHref + ',' + escapedUrl + '\r\n';
+                });
+                
+                csvContent += '\r\n'; // Add space between sections
+            });
+            
+            // Generate and download the file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "hash_links_report.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
     </script>
 </body>
 </html> 
