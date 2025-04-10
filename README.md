@@ -68,13 +68,6 @@ A tool that processes XML sitemaps, retrieves all pages, and scans them for link
 - For large sitemaps with many pages, processing may take some time
 - The progress bar and live summary provide feedback during processing
 
-## Header Detection
-
-The tool automatically excludes links in the following elements:
-- `<header>` tags
-- `<nav>` elements
-- Elements with class or ID containing "header", "navigation", "navbar", "main-nav"
-- This helps filter out navigation menus which often contain "#" links
 
 ## Notes
 

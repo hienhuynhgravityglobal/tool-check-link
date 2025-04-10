@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link # Character Checker</title>
+    <title>Hash Link Pattern Checker</title>
+    <link rel="icon" type="image/x-icon"
+        href="https://cdn.aglty.io/2259c66d-u/Attachments/NewItems/favicon_20230905013311_0.png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,9 +14,11 @@
             margin: 0 auto;
             padding: 20px;
         }
+
         h1 {
             text-align: center;
         }
+
         .form-container {
             margin-bottom: 20px;
             display: flex;
@@ -22,8 +27,9 @@
             margin-right: auto;
             border-radius: 5px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
+
         input[type="text"] {
             width: 100%;
             padding: 12px 15px;
@@ -32,6 +38,7 @@
             flex: 1;
             outline: none;
         }
+
         #checkButton,
         .page-item button {
             padding: 12px 20px;
@@ -44,42 +51,52 @@
             white-space: nowrap;
             transition: background-color 0.3s;
         }
+
         .page-item button {
             width: 121px;
         }
+
         #checkButton:hover,
         .page-item button:hover {
             background-color: #f4511e;
         }
+
         #checkButton:disabled,
         .page-item button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
+
         .pages-container {
             padding: 20px;
             background: #F3F5F9;
         }
+
         .results {
             margin-top: 20px;
         }
+
         .result-item {
             margin-bottom: 10px;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
+
         .result-item:last-child {
             margin-bottom: 0;
             padding-bottom: 0;
         }
+
         .has-hash {
             background-color: #ffeb3b50;
         }
+
         .loading {
             display: none;
             margin-top: 10px;
         }
+
         .stats {
             background-color: #f5f5f5;
             padding: 15px;
@@ -87,9 +104,11 @@
             margin-bottom: 20px;
             border-left: 4px solid #2196F3;
         }
+
         .stats p {
             margin: 5px 0;
         }
+
         .note {
             background-color: #ffeb3b50;
             padding: 10px 15px;
@@ -97,9 +116,11 @@
             margin: 20px 0;
             border-left: 4px solid #ffc107;
         }
+
         .sitemap-container {
             margin-bottom: 20px;
         }
+
         .sitemap-container h3 {
             background-color: #f1f1f1;
             padding: 10px;
@@ -107,18 +128,21 @@
             margin-bottom: 10px;
             border-radius: 4px;
         }
+
         .page-item {
             padding: 15px;
             padding-right: 135px;
             margin-bottom: 5px;
-            border-bottom: 1px solid #eee; 
+            border-bottom: 1px solid #eee;
         }
+
         .page-item.has-hash {
             background-color: white;
             position: relative;
             border-radius: 15px;
             margin-bottom: 15px;
         }
+
         .collapse-btn {
             margin-left: 10px;
             position: absolute;
@@ -128,6 +152,7 @@
             border-bottom-right-radius: 15px;
             height: 100%;
         }
+
         .progress-container {
             margin: 20px 0;
             width: 100%;
@@ -136,6 +161,7 @@
             border-radius: 20px;
             padding: 8px;
         }
+
         .progress-bar {
             height: 20px;
             width: 0%;
@@ -147,6 +173,7 @@
             color: white;
             font-size: 12px;
         }
+
         .summary-box {
             background-color: #e3f2fd;
             padding: 15px;
@@ -154,20 +181,23 @@
             margin: 20px 0;
             border-left: 4px solid #2196F3;
         }
+
         .hash-links-section {
             overflow: hidden;
             transition: height 0.4s ease;
             height: 0;
         }
+
         .stage-container {
             display: flex;
             align-items: stretch;
             margin: 20px 0;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             background-color: #fff;
         }
+
         .stage-number {
             display: flex;
             align-items: center;
@@ -178,64 +208,107 @@
             width: 70px;
             padding: 15px;
         }
+
         .stage-content {
             flex: 1;
             padding: 15px 20px;
         }
+
         .stage-content h3 {
             margin-top: 0;
             margin-bottom: 10px;
             font-size: 18px;
         }
+
         .stage-content p {
             margin: 0;
             color: #666;
             font-size: 14px;
         }
+
         .stage-icon {
             display: flex;
             align-items: center;
             justify-content: center;
             width: 70px;
-            background-color: rgba(255,255,255,0.2);
+            background-color: rgba(255, 255, 255, 0.2);
         }
+
         .stage-icon img {
             width: 32px;
             height: 32px;
         }
+
         .stage-1 {
             background-color: #ff6347;
         }
+
         .stage-2 {
             background-color: #ffa726;
         }
+
         .stage-3 {
             background-color: #772fc9;
         }
+
         .stage-4 {
             background-color: #29b6f6;
         }
+
         .stage-5 {
             background-color: #66bb6a;
         }
+
         .sitemap-url {
             word-break: break-all;
         }
+
+        /* Style for header items to distinguish them */
+        .page-item.header-item {
+            background-color: #f8f8ff;
+            /* Light lavender background */
+            border-left: 4px solid #9370db;
+            /* Medium purple border */
+        }
+
+        .page-item.header-item .header-types {
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #f0f0f8;
+            border-radius: 4px;
+        }
+
+        /* Style for footer items to distinguish them */
+        .page-item.footer-item {
+            background-color: #f5fff5;
+            /* Light mint background */
+            border-left: 4px solid #3cb371;
+            /* Medium sea green border */
+        }
+
+        .page-item.footer-item .header-types {
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #e8f8e8;
+            border-radius: 4px;
+        }
     </style>
 </head>
+
 <body>
-    <h1>Tool check for Link # Character</h1>
-    
+    <h1>Tool for Checking Hash Link Patterns</h1>
+
     <div class="form-container">
-        <input type="text" id="urlInput" placeholder="Enter sitemap URL (e.g., https://example.com/sitemap_index.xml)" required>
+        <input type="text" id="urlInput" placeholder="Enter sitemap URL (e.g., https://example.com/sitemap_index.xml)"
+            required>
         <button type="submit" id="checkButton">Process Now</button>
     </div>
     <div id="loading" class="loading">Processing, please wait... This may take a while for large sitemaps.</div>
-    
+
     <div id="progressContainer" class="progress-container" style="display: none;">
         <div id="progressBar" class="progress-bar">0%</div>
     </div>
-    
+
     <div class="results">
         <div id="summary"></div>
         <div id="results"></div>
@@ -248,224 +321,418 @@
         let pagesWithHash = 0;
         let totalHashLinks = 0;
         let isCancelled = false;
-        
-        document.getElementById('checkButton').addEventListener('click', async function() {
+
+        document.getElementById('checkButton').addEventListener('click', async function () {
             const url = document.getElementById('urlInput').value.trim();
             if (!url) return;
-            
+
             // Reset state
             totalPagesToCheck = 0;
             pagesChecked = 0;
             pagesWithHash = 0;
             totalHashLinks = 0;
             isCancelled = false;
-            
+
             const loading = document.getElementById('loading');
             const checkButton = document.getElementById('checkButton');
             const resultsDiv = document.getElementById('results');
             const summaryDiv = document.getElementById('summary');
             const progressContainer = document.getElementById('progressContainer');
             const progressBar = document.getElementById('progressBar');
-            
+
             // Clear previous results
             resultsDiv.innerHTML = '';
             summaryDiv.innerHTML = '';
-            
+
             // Show loading and progress
             loading.style.display = 'block';
             progressContainer.style.display = 'block';
             checkButton.disabled = true;
             checkButton.innerText = 'Processing...';
-            
+
             try {
                 // Step 1: Process the sitemap index
                 summaryDiv.innerHTML = `<div class="stage-container"><div class="stage-number stage-1">01</div><div class="stage-content"><h3>Stage 1: Processing sitemap index...</h3><p>Processing the sitemap index to find all sitemaps...</p></div></div>`;
                 const indexResult = await processSitemapIndex(url);
-                
+
                 if (!indexResult.success) {
                     throw new Error(indexResult.error || 'Failed to process sitemap index');
                 }
-                
+
                 // Always add Stage 2 to the summary div (not results div)
                 const stage2Container = document.createElement('div');
                 stage2Container.className = 'stage-container';
-                
+
                 // Step 2: Process individual sitemaps or the single sitemap
                 if (indexResult.isSitemapIndex && indexResult.sitemaps.length > 0) {
                     // If it's a sitemap index
                     stage2Container.innerHTML = `<div class="stage-number stage-2">02</div><div class="stage-content"><h3>Stage 2: Processing ${indexResult.sitemaps.length} sitemaps...</h3><p>Processing ${indexResult.sitemaps.length} sitemaps...</p></div></div>`;
                     summaryDiv.appendChild(stage2Container);
-                    
+
                     // Create a container for sitemap sections
                     const sitemapContainer = document.createElement('div');
                     sitemapContainer.className = 'sitemap-container';
                     resultsDiv.appendChild(sitemapContainer);
-                    
+
                     // Process each sitemap to get page URLs
                     const allPages = [];
                     for (let i = 0; i < indexResult.sitemaps.length; i++) {
                         if (isCancelled) break;
-                        
+
                         const sitemap = indexResult.sitemaps[i];
                         const sitemapResult = await processSitemap(sitemap.loc);
-                        
+
                         if (sitemapResult.success && sitemapResult.pages.length > 0) {
                             const sitemapSection = document.createElement('div');
                             sitemapSection.innerHTML = `
-                                <h3>Sitemap ${i+1}: <span class="sitemap-url">${sitemap.loc}</span></h3>
+                                <h3>Sitemap ${i + 1}: <span class="sitemap-url">${sitemap.loc}</span></h3>
                                 <p>Found ${sitemapResult.pages.length} pages</p>
                             `;
                             sitemapContainer.appendChild(sitemapSection);
-                            
+
                             allPages.push(...sitemapResult.pages);
                         }
-                        
+
                         // Update progress
                         const sitemapProgress = ((i + 1) / indexResult.sitemaps.length) * 30;
                         progressBar.style.width = `${sitemapProgress}%`;
-                        progressBar.innerText = `Processing sitemaps: ${i+1}/${indexResult.sitemaps.length}`;
+                        progressBar.innerText = `Processing sitemaps: ${i + 1}/${indexResult.sitemaps.length}`;
                     }
-                    
+
                     // Step 3: Check each page for # links
                     totalPagesToCheck = allPages.length;
                     summaryDiv.innerHTML += `<div class="stage-container"><div class="stage-number stage-3">03</div><div class="stage-content"><h3>Stage 3: Checking ${totalPagesToCheck} pages for # links...</h3><p>Checking ${totalPagesToCheck} pages for # links...</p></div></div>`;
-                    
+
                     // Create container for pages with hash links
                     const pagesContainer = document.createElement('div');
                     pagesContainer.className = 'pages-container';
                     resultsDiv.appendChild(pagesContainer);
-                    
+
                     // Process pages in batches to avoid overwhelming the server
                     const batchSize = 5;
                     for (let i = 0; i < allPages.length; i += batchSize) {
                         if (isCancelled) break;
-                        
+
                         const batch = allPages.slice(i, i + batchSize);
                         const batchPromises = batch.map(page => checkPageForHash(page.loc));
                         const batchResults = await Promise.all(batchPromises);
-                        
+
                         for (const result of batchResults) {
                             pagesChecked++;
-                            
-                            if (result.success && result.hasHashLinks) {
+
+                            if (result.success && (result.hashLinks.length > 0 || result.headerHashLinks.length > 0)) {
                                 pagesWithHash++;
-                                totalHashLinks += result.hashLinks.length;
-                                
-                                // Add to the results
-                                const pageItem = document.createElement('div');
-                                pageItem.className = 'page-item has-hash';
-                                
-                                let hashLinksHtml = '';
-                                result.hashLinks.forEach(link => {
-                                    hashLinksHtml += `
-                                        <div class="result-item has-hash">
-                                            <strong>Link Text:</strong> ${link.text}<br>
-                                            <strong>HREF:</strong> ${link.href}<br>
-                                            <strong>Context:</strong> ${link.context || 'No context available'}
+                                const totalLinks = (result.hashLinks ? result.hashLinks.length : 0) +
+                                    (result.headerHashLinks ? result.headerHashLinks.length : 0);
+                                totalHashLinks += totalLinks;
+
+                                // If there are header links, separate them by type (header vs footer)
+                                if (result.headerHashLinks && result.headerHashLinks.length > 0) {
+                                    // Group links by whether they're in header or footer
+                                    const headerLinks = [];
+                                    const footerLinks = [];
+
+                                    result.headerHashLinks.forEach(link => {
+                                        if (link.headerType && (
+                                            link.headerType === 'footer' ||
+                                            link.headerType.includes('footer') ||
+                                            link.headerType.startsWith('.footer')
+                                        )) {
+                                            footerLinks.push(link);
+                                        } else {
+                                            headerLinks.push(link);
+                                        }
+                                    });
+
+                                    // Display header links if any
+                                    if (headerLinks.length > 0) {
+                                        const headerItem = document.createElement('div');
+                                        headerItem.className = 'page-item has-hash header-item';
+
+                                        let headerLinksHtml = '';
+                                        let headerTypes = new Set();
+
+                                        headerLinks.forEach(link => {
+                                            headerLinksHtml += `
+                                                <div class="result-item has-hash">
+                                                    <strong>Link Text:</strong> ${link.text}<br>
+                                                    <strong>HREF:</strong> ${link.href}<br>
+                                                    <strong>Context:</strong> ${link.context || 'No context available'}
+                                                </div>
+                                            `;
+
+                                            if (link.headerType) {
+                                                headerTypes.add(link.headerType);
+                                            }
+                                        });
+
+                                        const headerTypesList = Array.from(headerTypes).join(', ');
+
+                                        headerItem.innerHTML = `
+                                            <strong>Header Links for: </strong><a href="${result.url}" target="_blank">${result.url}</a>
+                                            <strong> (Found ${headerLinks.length} links in ${headerTypes.size} header elements)</strong>
+                                            <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Links</button>
+                                            <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                                                <div class="header-types"><strong>Header types:</strong> ${headerTypesList}</div>
+                                                ${headerLinksHtml}
+                                            </div>
+                                        `;
+
+                                        pagesContainer.appendChild(headerItem);
+                                    }
+
+                                    // Display footer links if any
+                                    if (footerLinks.length > 0) {
+                                        const footerItem = document.createElement('div');
+                                        footerItem.className = 'page-item has-hash footer-item';
+
+                                        let footerLinksHtml = '';
+                                        let footerTypes = new Set();
+
+                                        footerLinks.forEach(link => {
+                                            footerLinksHtml += `
+                                                <div class="result-item has-hash">
+                                                    <strong>Link Text:</strong> ${link.text}<br>
+                                                    <strong>HREF:</strong> ${link.href}<br>
+                                                    <strong>Context:</strong> ${link.context || 'No context available'}
+                                                </div>
+                                            `;
+
+                                            if (link.headerType) {
+                                                footerTypes.add(link.headerType);
+                                            }
+                                        });
+
+                                        const footerTypesList = Array.from(footerTypes).join(', ');
+
+                                        footerItem.innerHTML = `
+                                            <strong>Footer Links for: </strong><a href="${result.url}" target="_blank">${result.url}</a>
+                                            <strong> (Found ${footerLinks.length} links in ${footerTypes.size} footer elements)</strong>
+                                            <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Links</button>
+                                            <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                                                <div class="header-types"><strong>Footer types:</strong> ${footerTypesList}</div>
+                                                ${footerLinksHtml}
+                                            </div>
+                                        `;
+
+                                        pagesContainer.appendChild(footerItem);
+                                    }
+                                }
+
+                                // Add the regular links in a separate container (if any)
+                                if (result.hashLinks && result.hashLinks.length > 0) {
+                                    const pageItem = document.createElement('div');
+                                    pageItem.className = 'page-item has-hash';
+
+                                    let hashLinksHtml = '';
+                                    result.hashLinks.forEach(link => {
+                                        hashLinksHtml += `
+                                            <div class="result-item has-hash">
+                                                <strong>Link Text:</strong> ${link.text}<br>
+                                                <strong>HREF:</strong> ${link.href}<br>
+                                                <strong>Context:</strong> ${link.context || 'No context available'}
+                                            </div>
+                                        `;
+                                    });
+
+                                    pageItem.innerHTML = `
+                                        <a href="${result.url}" target="_blank">${result.url}</a>
+                                        <strong> (Found ${result.hashLinks.length} regular links)</strong>
+                                        <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Links</button>
+                                        <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                                            ${hashLinksHtml}
                                         </div>
                                     `;
-                                });
-                                
-                                pageItem.innerHTML = `
-                                    <a href="${result.url}" target="_blank">${result.url}</a>
-                                    <strong> (Found ${result.hashLinks.length} links)</strong>
-                                    <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Links</button>
-                                    <div class="hash-links-section" style="height: 0px; padding: 0px;">
-                                        ${hashLinksHtml}
-                                    </div>
-                                `;
-                                
-                                pagesContainer.appendChild(pageItem);
+
+                                    pagesContainer.appendChild(pageItem);
+                                }
                             }
-                            
+
                             // Update progress
                             const pageProgress = 30 + ((pagesChecked / totalPagesToCheck) * 70);
                             progressBar.style.width = `${pageProgress}%`;
                             progressBar.innerText = `Checking pages: ${pagesChecked}/${totalPagesToCheck}`;
-                            
+
                             // Update live summary
                             updateLiveSummary();
                         }
                     }
-                    
+
                     // Show final summary
                     showFinalSummary();
-                    
+
                 } else if (!indexResult.isSitemapIndex && indexResult.pages && indexResult.pages.length > 0) {
                     // If the input was a regular sitemap, not an index
                     // Still show Stage 2, but indicate it's a regular sitemap
                     stage2Container.innerHTML = `<div class="stage-number stage-2">02</div><div class="stage-content"><h3>Stage 2: Processing sitemap</h3><p>Processing a regular sitemap (not an index)...</p></div></div>`;
                     summaryDiv.appendChild(stage2Container);
-                    
+
                     // Now show Stage 3
                     summaryDiv.innerHTML += `<div class="stage-container"><div class="stage-number stage-3">03</div><div class="stage-content"><h3>Stage 3: Checking ${indexResult.pages.length} pages for # links...</h3><p>Checking ${indexResult.pages.length} pages for # links...</p></div></div>`;
-                    
+
                     totalPagesToCheck = indexResult.pages.length;
-                    
+
                     // Create container for pages with hash links
                     const pagesContainer = document.createElement('div');
                     pagesContainer.className = 'pages-container';
                     resultsDiv.appendChild(pagesContainer);
-                    
+
                     // Process pages in batches
                     const batchSize = 5;
                     for (let i = 0; i < indexResult.pages.length; i += batchSize) {
                         if (isCancelled) break;
-                        
+
                         const batch = indexResult.pages.slice(i, i + batchSize);
                         const batchPromises = batch.map(page => checkPageForHash(page.loc));
                         const batchResults = await Promise.all(batchPromises);
-                        
+
                         for (const result of batchResults) {
                             pagesChecked++;
-                            
-                            if (result.success && result.hasHashLinks) {
+
+                            if (result.success && (result.hashLinks.length > 0 || result.headerHashLinks.length > 0)) {
                                 pagesWithHash++;
-                                totalHashLinks += result.hashLinks.length;
-                                
-                                // Add to the results
-                                const pageItem = document.createElement('div');
-                                pageItem.className = 'page-item has-hash';
-                                
-                                let hashLinksHtml = '';
-                                result.hashLinks.forEach(link => {
-                                    hashLinksHtml += `
-                                        <div class="result-item has-hash">
-                                            <strong>Link Text:</strong> ${link.text}<br>
-                                            <strong>HREF:</strong> ${link.href}<br>
-                                            <strong>Context:</strong> ${link.context || 'No context available'}
+                                const totalLinks = (result.hashLinks ? result.hashLinks.length : 0) +
+                                    (result.headerHashLinks ? result.headerHashLinks.length : 0);
+                                totalHashLinks += totalLinks;
+
+                                // If there are header links, separate them by type (header vs footer)
+                                if (result.headerHashLinks && result.headerHashLinks.length > 0) {
+                                    // Group links by whether they're in header or footer
+                                    const headerLinks = [];
+                                    const footerLinks = [];
+
+                                    result.headerHashLinks.forEach(link => {
+                                        if (link.headerType && (
+                                            link.headerType === 'footer' ||
+                                            link.headerType.includes('footer') ||
+                                            link.headerType.startsWith('.footer')
+                                        )) {
+                                            footerLinks.push(link);
+                                        } else {
+                                            headerLinks.push(link);
+                                        }
+                                    });
+
+                                    // Display header links if any
+                                    if (headerLinks.length > 0) {
+                                        const headerItem = document.createElement('div');
+                                        headerItem.className = 'page-item has-hash header-item';
+
+                                        let headerLinksHtml = '';
+                                        let headerTypes = new Set();
+
+                                        headerLinks.forEach(link => {
+                                            headerLinksHtml += `
+                                                <div class="result-item has-hash">
+                                                    <strong>Link Text:</strong> ${link.text}<br>
+                                                    <strong>HREF:</strong> ${link.href}<br>
+                                                    <strong>Context:</strong> ${link.context || 'No context available'}
+                                                </div>
+                                            `;
+
+                                            if (link.headerType) {
+                                                headerTypes.add(link.headerType);
+                                            }
+                                        });
+
+                                        const headerTypesList = Array.from(headerTypes).join(', ');
+
+                                        headerItem.innerHTML = `
+                                            <strong>Header Links for: </strong><a href="${result.url}" target="_blank">${result.url}</a>
+                                            <strong> (Found ${headerLinks.length} links in ${headerTypes.size} header elements)</strong>
+                                            <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Links</button>
+                                            <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                                                <div class="header-types"><strong>Header types:</strong> ${headerTypesList}</div>
+                                                ${headerLinksHtml}
+                                            </div>
+                                        `;
+
+                                        pagesContainer.appendChild(headerItem);
+                                    }
+
+                                    // Display footer links if any
+                                    if (footerLinks.length > 0) {
+                                        const footerItem = document.createElement('div');
+                                        footerItem.className = 'page-item has-hash footer-item';
+
+                                        let footerLinksHtml = '';
+                                        let footerTypes = new Set();
+
+                                        footerLinks.forEach(link => {
+                                            footerLinksHtml += `
+                                                <div class="result-item has-hash">
+                                                    <strong>Link Text:</strong> ${link.text}<br>
+                                                    <strong>HREF:</strong> ${link.href}<br>
+                                                    <strong>Context:</strong> ${link.context || 'No context available'}
+                                                </div>
+                                            `;
+
+                                            if (link.headerType) {
+                                                footerTypes.add(link.headerType);
+                                            }
+                                        });
+
+                                        const footerTypesList = Array.from(footerTypes).join(', ');
+
+                                        footerItem.innerHTML = `
+                                            <strong>Footer Links for: </strong><a href="${result.url}" target="_blank">${result.url}</a>
+                                            <strong> (Found ${footerLinks.length} links in ${footerTypes.size} footer elements)</strong>
+                                            <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Links</button>
+                                            <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                                                <div class="header-types"><strong>Footer types:</strong> ${footerTypesList}</div>
+                                                ${footerLinksHtml}
+                                            </div>
+                                        `;
+
+                                        pagesContainer.appendChild(footerItem);
+                                    }
+                                }
+
+                                // Add the regular links in a separate container (if any)
+                                if (result.hashLinks && result.hashLinks.length > 0) {
+                                    const pageItem = document.createElement('div');
+                                    pageItem.className = 'page-item has-hash';
+
+                                    let hashLinksHtml = '';
+                                    result.hashLinks.forEach(link => {
+                                        hashLinksHtml += `
+                                            <div class="result-item has-hash">
+                                                <strong>Link Text:</strong> ${link.text}<br>
+                                                <strong>HREF:</strong> ${link.href}<br>
+                                                <strong>Context:</strong> ${link.context || 'No context available'}
+                                            </div>
+                                        `;
+                                    });
+
+                                    pageItem.innerHTML = `
+                                        <a href="${result.url}" target="_blank">${result.url}</a>
+                                        <strong> (Found ${result.hashLinks.length} regular links)</strong>
+                                        <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Links</button>
+                                        <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                                            ${hashLinksHtml}
                                         </div>
                                     `;
-                                });
-                                
-                                pageItem.innerHTML = `
-                                    <a href="${result.url}" target="_blank">${result.url}</a>
-                                    <strong> (Found ${result.hashLinks.length} links)</strong>
-                                    <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Links</button>
-                                    <div class="hash-links-section" style="height: 0px; padding: 0px;">
-                                        ${hashLinksHtml}
-                                    </div>
-                                `;
-                                
-                                pagesContainer.appendChild(pageItem);
+
+                                    pagesContainer.appendChild(pageItem);
+                                }
                             }
-                            
+
                             // Update progress
                             const pageProgress = ((pagesChecked / totalPagesToCheck) * 100);
                             progressBar.style.width = `${pageProgress}%`;
                             progressBar.innerText = `Checking pages: ${pagesChecked}/${totalPagesToCheck}`;
-                            
+
                             // Update live summary
                             updateLiveSummary();
                         }
                     }
-                    
+
                     // Show final summary
                     showFinalSummary();
                 } else {
                     throw new Error('No pages found in the sitemap');
                 }
-                
+
             } catch (error) {
                 console.error('Error:', error);
                 summaryDiv.innerHTML = `<h2>Error: ${error.message}</h2>`;
@@ -474,23 +741,23 @@
                 loading.style.display = 'none';
                 checkButton.disabled = false;
                 checkButton.innerText = 'Process Now';
-                
+
                 // Complete progress bar
                 progressBar.style.width = '100%';
                 progressBar.innerText = 'Complete';
             }
         });
-        
+
         // Function to process a sitemap index
         async function processSitemapIndex(url) {
             try {
                 const response = await fetch(`/api/process-sitemap-index?url=${encodeURIComponent(url)}`);
                 const data = await response.json();
-                
+
                 if (!response.ok) {
                     throw new Error(data.error || 'Failed to process sitemap index');
                 }
-                
+
                 // Handle sitemap index
                 if (data.isSitemapIndex) {
                     return {
@@ -498,13 +765,13 @@
                         isSitemapIndex: true,
                         sitemaps: data.sitemapUrls || []
                     };
-                } 
+                }
                 // Handle single sitemap
                 else if (data.originalData && data.originalData.urlset && data.originalData.urlset.url) {
-                    const urls = Array.isArray(data.originalData.urlset.url) 
-                        ? data.originalData.urlset.url 
+                    const urls = Array.isArray(data.originalData.urlset.url)
+                        ? data.originalData.urlset.url
                         : [data.originalData.urlset.url];
-                    
+
                     return {
                         success: true,
                         isSitemapIndex: false,
@@ -526,27 +793,27 @@
                 };
             }
         }
-        
+
         // Function to process a single sitemap
         async function processSitemap(url) {
             try {
                 const response = await fetch(`/api/fetch-page?url=${encodeURIComponent(url)}`);
                 const data = await response.json();
-                
+
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || 'Failed to fetch sitemap');
                 }
-                
+
                 if (!data.isXml) {
                     throw new Error('The URL does not point to an XML sitemap');
                 }
-                
+
                 // Extract pages from the sitemap
                 if (data.parsedXml && data.parsedXml.urlset && data.parsedXml.urlset.url) {
-                    const urls = Array.isArray(data.parsedXml.urlset.url) 
-                        ? data.parsedXml.urlset.url 
+                    const urls = Array.isArray(data.parsedXml.urlset.url)
+                        ? data.parsedXml.urlset.url
                         : [data.parsedXml.urlset.url];
-                    
+
                     return {
                         success: true,
                         pages: urls.map(item => {
@@ -572,7 +839,7 @@
                 };
             }
         }
-        
+
         // Function to check a single page for href="#" links
         async function checkPageForHash(url) {
             try {
@@ -585,22 +852,23 @@
                     url: url,
                     error: error.message,
                     hasHashLinks: false,
-                    hashLinks: []
+                    hashLinks: [],
+                    headerHashLinks: []
                 };
             }
         }
-        
+
         // Function to update the live summary during processing
         function updateLiveSummary() {
             const summaryDiv = document.getElementById('summary');
-            
+
             // Check if the stage-4 container already exists
             let stageContainer = null;
             const stage4Element = summaryDiv.querySelector('.stage-4');
             if (stage4Element) {
                 stageContainer = stage4Element.closest('.stage-container');
             }
-            
+
             if (!stageContainer) {
                 // Create a new stage container if it doesn't exist
                 stageContainer = document.createElement('div');
@@ -614,13 +882,12 @@
                 `;
                 summaryDiv.appendChild(stageContainer);
             }
-            
         }
-        
+
         // Function to show the final summary
         function showFinalSummary() {
             const summaryDiv = document.getElementById('summary');
-            
+
             // Add stage title for final results
             const stageContainer = document.createElement('div');
             stageContainer.className = 'stage-container';
@@ -632,33 +899,37 @@
                 </div>
             `;
             summaryDiv.appendChild(stageContainer);
-            
+
             const finalSummary = document.createElement('div');
             finalSummary.className = 'summary-box';
-            
+
             if (pagesWithHash > 0) {
                 finalSummary.innerHTML = `
                     <p><strong>Total pages checked:</strong> ${pagesChecked}</p>
-                    <p><strong>Pages with href="#" links found:</strong> ${pagesWithHash}</p>
-                    <p><strong>Total href="#" links found:</strong> ${totalHashLinks}</p>
-                    <p>Links in headers, navigation menus, and navbar elements are automatically excluded.</p>
-                    <p>Scroll down to see pages with href="#" links.</p>
+                    <p><strong>Pages with hash links found:</strong> ${pagesWithHash}</p>
+                    <p><strong>Total hash links found:</strong> ${totalHashLinks}</p>
+                    <p>Links in headers, navigation menus, and navbar elements are now included in the results.</p>
+                    <p><strong>Header optimization:</strong> Similar headers across different pages are analyzed only once.</p>
+                    <p><strong>Supported patterns:</strong> The tool checks for both "#", "/#"</p>
+                    <p>Scroll down to see pages with hash links.</p>
                 `;
             } else {
                 finalSummary.innerHTML = `
                     <p><strong>Total pages checked:</strong> ${pagesChecked}</p>
-                    <p><strong>No pages with href="#" links were found.</strong></p>
-                    <p>Note: Links in headers, navigation menus, and navbar elements are automatically excluded.</p>
+                    <p><strong>No hash links were found.</strong></p>
+                    <p>Note: Links in headers, navigation menus, and navbar elements are now included in the search.</p>
+                    <p><strong>Header optimization:</strong> Similar headers across different pages are analyzed only once.</p>
+                    <p><strong>Supported patterns:</strong> The tool checks for both "#", "/#"</p>
                 `;
             }
-            
+
             summaryDiv.appendChild(finalSummary);
         }
-        
+
         // Function to toggle showing/hiding hash links for a page
         function toggleHashLinks(button) {
             const section = button.nextElementSibling;
-            
+
             if (section.style.height === "0px" || section.style.height === "") {
                 section.style.padding = "10px 0 0 0";
                 const sectionHeight = section.scrollHeight + "px";
@@ -670,9 +941,10 @@
                 button.innerText = 'Show Links';
             }
         }
-        
+
         // Make the toggle function available globally
         window.toggleHashLinks = toggleHashLinks;
     </script>
 </body>
-</html> 
+
+</html>
