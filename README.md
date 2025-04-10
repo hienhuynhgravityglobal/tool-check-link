@@ -1,6 +1,6 @@
-# Link # Character Checker for Sitemaps
+# Link # and /# Character Checker for Sitemaps
 
-A tool that processes XML sitemaps, retrieves all pages, and scans them for links with href="#", excluding those in headers and navigation menus.
+A tool that processes XML sitemaps, retrieves all pages, and scans them for links with href="#" or href="/#", categorizing them by location (regular content, headers, or footers).
 
 ## Setup and Installation
 
@@ -13,12 +13,14 @@ A tool that processes XML sitemaps, retrieves all pages, and scans them for link
 ## How to Use
 
 1. Enter a sitemap URL in the input field (e.g., https://example.com/sitemap_index.xml)
-2. Click the "Process Sitemap and Check Links" button
+2. Click the "Process Now" button
 3. The tool will:
    - Process the sitemap or sitemap index
    - Find all pages linked in the sitemap(s)
-   - Check each page for links with href="#" (excluding those in headers)
+   - Check each page for links with href="#" or href="/#"
+   - Categorize links by location (regular content, headers, footers)
    - Display a summary of results
+4. After processing completes, you can export results to Excel or CSV format
 
 ## Features
 
@@ -27,15 +29,19 @@ A tool that processes XML sitemaps, retrieves all pages, and scans them for link
   - For sitemap index files, it processes all child sitemaps
   - Extracts all URLs from sitemaps
 
-- **Smart Page Analysis**:
+- **Comprehensive Link Analysis**:
   - Visits each page listed in the sitemap(s)
-  - Checks for links with exactly href="#"
-  - **Excludes links in headers, navigation bars, and menus**
+  - Checks for links with exactly href="#" or href="/#"
+  - **Categorizes links by location**:
+    - Regular content links (main body content)
+    - Header/navigation links (in headers, nav bars, menus)
+    - Footer links (in footer elements)
   - Shows which pages contain these links
   - Displays the link text and context information
 
-- **Context Information**:
+- **Smart Context Information**:
   - Provides context for each link found (surrounding text or parent element)
+  - Shows header/footer type for categorized links
   - Helps identify where in the page the link appears
   - Makes it easier to locate and fix issues
 
@@ -45,11 +51,17 @@ A tool that processes XML sitemaps, retrieves all pages, and scans them for link
   - Updates count of pages checked and results found
   - Provides a live summary while processing
 
-- **Results Display**:
+- **Detailed Results Display**:
   - Clear summary of total pages checked
-  - Count of pages with href="#" links
-  - Total number of href="#" links found
+  - Count of pages with href="#" or href="/#" links
+  - Total number of href="#" or href="/#" links found in each category
   - Collapsible sections to view link details
+  - Lists of pages where each link appears
+
+- **Export Functionality**:
+  - Export results to Excel format (with separate sheets for each category)
+  - Export results to CSV format
+  - All exports include link text, HREF, and URL for each link
 
 ## Technical Details
 
@@ -61,13 +73,14 @@ A tool that processes XML sitemaps, retrieves all pages, and scans them for link
   - xml2js: XML parsing library
   - jsdom: HTML parsing and DOM manipulation
   - CORS: Cross-origin resource sharing support
+  - SheetJS: Excel file generation
+  - Font Awesome: Icons for the interface
 
 ## Performance Notes
 
 - The tool processes sitemaps and pages in batches to avoid overwhelming the server
 - For large sitemaps with many pages, processing may take some time
 - The progress bar and live summary provide feedback during processing
-
 
 ## Notes
 
@@ -85,13 +98,13 @@ This tool uses a Node.js backend to avoid CORS (Cross-Origin Resource Sharing) i
 1. The frontend sends a request to the local server
 2. The server fetches the target website or XML sitemap using axios
 3. The server automatically detects if the content is HTML or XML
-4. For HTML: JavaScript parses the content and categorizes all links
+4. For HTML: JavaScript parses the content and categorizes all links based on location 
 5. For XML: The server parses the XML structure and extracts all URLs
 6. The tool displays the appropriate results based on content type
+7. Results can be exported to Excel or CSV format for further analysis
 
-## Technical Details
+## Browser Compatibility
 
-- Frontend: HTML, CSS, and JavaScript
-- Backend: Node.js with Express, Axios, CORS middleware, and xml2js for XML parsing
-- The server acts as a proxy to bypass CORS restrictions
-- Works with most modern browsers with JavaScript enabled 
+- Works with most modern browsers with JavaScript enabled
+- Requires browser support for ES6 features
+- Compatible with Chrome, Firefox, Edge, and Safari 
