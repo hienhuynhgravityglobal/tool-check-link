@@ -159,20 +159,19 @@ app.get('/api/check-page-for-hash', async (req, res) => {
         url: url,
         error: 'Not an HTML page',
         hasHashLinks: false,
-        hashLinks: []
+        hashLinks: [],
+        headerHashLinks: [],
+        footerHashLinks: []
       });
     }
     
-    // Extract links with href="#"
+    // Extract links with href="#" or href="/#"
     const htmlContent = response.data;
     const { JSDOM } = require('jsdom');
     const dom = new JSDOM(htmlContent);
     const document = dom.window.document;
     
-    const allLinks = document.getElementsByTagName('a');
-    const hashLinks = [];
-    
-    // Identify header elements to exclude
+    // Identify header elements to check separately
     const headerElements = [
       ...document.getElementsByTagName('header'),
       ...document.querySelectorAll('nav'),
@@ -186,6 +185,23 @@ app.get('/api/check-page-for-hash', async (req, res) => {
       ...document.querySelectorAll('#navbar')
     ];
     
+    // Identify footer elements to check separately
+    const footerElements = [
+      ...document.getElementsByTagName('footer'),
+      ...document.querySelectorAll('.footer'),
+      ...document.querySelectorAll('#footer'),
+      ...document.querySelectorAll('.site-footer'),
+      ...document.querySelectorAll('#site-footer'),
+      ...document.querySelectorAll('.bottom-footer'),
+      ...document.querySelectorAll('.page-footer'),
+      ...document.querySelectorAll('.copyright-footer'),
+      ...document.querySelectorAll('[role="contentinfo"]')
+    ];
+    
+    const headerHashLinks = [];
+    const footerHashLinks = [];
+    const hashLinks = [];
+    
     // Function to check if an element is inside a header
     const isInsideHeader = (element) => {
       let current = element;
@@ -198,45 +214,141 @@ app.get('/api/check-page-for-hash', async (req, res) => {
       return false;
     };
     
+    // Function to check if an element is inside a footer
+    const isInsideFooter = (element) => {
+      let current = element;
+      while (current) {
+        if (footerElements.includes(current)) {
+          return true;
+        }
+        current = current.parentNode;
+      }
+      return false;
+    };
+    
+    // Extract context from a link
+    const extractContext = (link) => {
+      let context = '';
+      
+      // Try to get a parent element with an ID or class for context
+      let contextElement = link.parentNode;
+      let depth = 0;
+      const maxDepth = 3; // Don't go too far up the tree
+      
+      while (contextElement && depth < maxDepth) {
+        if (contextElement.id || 
+            (contextElement.className && contextElement.className.trim())) {
+          context = contextElement.id 
+            ? `Inside element with id="${contextElement.id}"` 
+            : `Inside element with class="${contextElement.className.trim()}"`;
+          break;
+        }
+        contextElement = contextElement.parentNode;
+        depth++;
+      }
+      
+      if (!context) {
+        // If no good parent context found, get surrounding text
+        const parentText = link.parentNode?.textContent?.trim();
+        if (parentText && parentText.length > link.textContent.trim().length) {
+          const maxLength = 100;
+          context = `Near text: "${parentText.substring(0, maxLength)}${parentText.length > maxLength ? '...' : ''}"`;
+        }
+      }
+      
+      return context || 'No context available';
+    };
+    
+    // Function to format link text to handle multiple HTML tags
+    function formatLinkText(link) {
+      // If there are no children elements, just return the text
+      if (link.children.length === 0) {
+        return link.textContent.trim() || '[No text]';
+      }
+      
+      // Link has child elements - need to process them
+      const parts = [];
+      
+      // Get the text directly in the link (not in child elements)
+      const directText = Array.from(link.childNodes)
+        .filter(node => node.nodeType === 3) // Text nodes only
+        .map(node => node.textContent.trim())
+        .filter(text => text.length > 0)
+        .join(' ');
+      
+      if (directText) {
+        parts.push(directText);
+      }
+      
+      // Get text from each child element
+      Array.from(link.children).forEach(child => {
+        const childText = child.textContent.trim();
+        if (childText) {
+          parts.push(childText);
+        }
+      });
+      
+      // Join with pipe symbols
+      return parts.join(' | ') || link.textContent.trim() || '[No text]';
+    }
+    
+    // First, check all links in header elements
+    headerElements.forEach(headerElement => {
+      const links = headerElement.getElementsByTagName('a');
+      for (let i = 0; i < links.length; i++) {
+        const link = links[i];
+        const href = link.getAttribute('href');
+        
+        if (href === '#' || href === '/#') {
+          const context = extractContext(link);
+          
+          headerHashLinks.push({
+            text: formatLinkText(link),
+            href: href,
+            context: context,
+            headerType: headerElement.tagName.toLowerCase() + 
+                       (headerElement.id ? ` (id=${headerElement.id})` : '') + 
+                       (headerElement.className ? ` (class=${headerElement.className})` : '')
+          });
+        }
+      }
+    });
+    
+    // Second, check all links in footer elements
+    footerElements.forEach(footerElement => {
+      const links = footerElement.getElementsByTagName('a');
+      for (let i = 0; i < links.length; i++) {
+        const link = links[i];
+        const href = link.getAttribute('href');
+        
+        if (href === '#' || href === '/#') {
+          const context = extractContext(link);
+          
+          footerHashLinks.push({
+            text: formatLinkText(link),
+            href: href,
+            context: context,
+            footerType: footerElement.tagName.toLowerCase() + 
+                       (footerElement.id ? ` (id=${footerElement.id})` : '') + 
+                       (footerElement.className ? ` (class=${footerElement.className})` : '')
+          });
+        }
+      }
+    });
+    
+    // Then check all other links that are not in headers or footers
+    const allLinks = document.getElementsByTagName('a');
     for (let i = 0; i < allLinks.length; i++) {
       const link = allLinks[i];
       const href = link.getAttribute('href');
       
-      // Check if href is "#" and link is not in a header
-      if (href === '#' && !isInsideHeader(link)) {
-        // Get the context (surrounding text or parent element description)
-        let context = '';
-        
-        // Try to get a parent element with an ID or class for context
-        let contextElement = link.parentNode;
-        let depth = 0;
-        const maxDepth = 3; // Don't go too far up the tree
-        
-        while (contextElement && depth < maxDepth) {
-          if (contextElement.id || 
-              (contextElement.className && contextElement.className.trim())) {
-            context = contextElement.id 
-              ? `Inside element with id="${contextElement.id}"` 
-              : `Inside element with class="${contextElement.className.trim()}"`;
-            break;
-          }
-          contextElement = contextElement.parentNode;
-          depth++;
-        }
-        
-        if (!context) {
-          // If no good parent context found, get surrounding text
-          const parentText = link.parentNode?.textContent?.trim();
-          if (parentText && parentText.length > link.textContent.trim().length) {
-            const maxLength = 100;
-            context = `Near text: "${parentText.substring(0, maxLength)}${parentText.length > maxLength ? '...' : ''}"`;
-          }
-        }
+      if ((href === '#' || href === '/#') && !isInsideHeader(link) && !isInsideFooter(link)) {
+        const context = extractContext(link);
         
         hashLinks.push({
-          text: link.textContent.trim() || '[No text]',
-          href: '#',
-          context: context || 'No context available'
+          text: formatLinkText(link),
+          href: href,
+          context: context
         });
       }
     }
@@ -245,7 +357,11 @@ app.get('/api/check-page-for-hash', async (req, res) => {
       success: true,
       url: url,
       hasHashLinks: hashLinks.length > 0,
-      hashLinks: hashLinks
+      hashLinks: hashLinks,
+      hasHeaderHashLinks: headerHashLinks.length > 0,
+      headerHashLinks: headerHashLinks,
+      hasFooterHashLinks: footerHashLinks.length > 0,
+      footerHashLinks: footerHashLinks
     });
     
   } catch (error) {
@@ -255,7 +371,9 @@ app.get('/api/check-page-for-hash', async (req, res) => {
       url: url,
       error: error.message,
       hasHashLinks: false,
-      hashLinks: []
+      hashLinks: [],
+      headerHashLinks: [],
+      footerHashLinks: []
     });
   }
 });

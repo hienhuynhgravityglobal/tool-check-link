@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link # Character Checker</title>
+    <title>Link # and /# Character Checker</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -48,17 +48,26 @@
             width: 121px;
         }
         #checkButton:hover,
-        .page-item button:hover {
+        .page-item button:hover,
+        .collapse-btn:hover {
             background-color: #f4511e;
+            cursor: pointer;
         }
         #checkButton:disabled,
-        .page-item button:disabled {
+        .page-item button:disabled,
+        .collapse-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
         .pages-container {
             padding: 20px;
             background: #F3F5F9;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #5ebff3;
+        }
+        .pages-container:empty {
+            padding: 0;
         }
         .results {
             margin-top: 20px;
@@ -73,8 +82,27 @@
             margin-bottom: 0;
             padding-bottom: 0;
         }
-        .has-hash {
-            background-color: #ffeb3b50;
+        .link-text-parts {
+            display: inline-block;
+            background-color: #f9f9f9;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+        .link-text-part {
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 3px;
+        }
+        .link-text-separator {
+            color: #ff7043;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        .result-item.has-hash {
+            background-color: #ffeb3b10;
+            border-left: 3px solid #ffc107;
         }
         .loading {
             display: none;
@@ -98,7 +126,7 @@
             border-left: 4px solid #ffc107;
         }
         .sitemap-container {
-            margin-bottom: 20px;
+            margin-bottom: 70px;
         }
         .sitemap-container h3 {
             background-color: #f1f1f1;
@@ -127,6 +155,12 @@
             border-top-right-radius: 15px;
             border-bottom-right-radius: 15px;
             height: 100%;
+            width: 119px;
+            text-align: center;
+            border: none;
+            background: #ff7043;
+            color: white;
+            font-size: 16px;
         }
         .progress-container {
             margin: 20px 0;
@@ -221,10 +255,49 @@
         .sitemap-url {
             word-break: break-all;
         }
+        .header-links-container {
+            background-color: #e8f5e9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .header-page-item {
+            background-color: #f1f8e9;
+            position: relative;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            padding-right: 135px;
+            border-bottom: 1px solid #c5e1a5;
+        }
+        .footer-links-container {
+            background-color: #e3f2fd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .footer-page-item {
+            background-color: #e8f4f8;
+            position: relative;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            padding-right: 135px;
+            border-bottom: 1px solid #90caf9;
+        }
+        .no-links-notice {
+            background-color: #ffecb3;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #ffc107;
+        }
     </style>
 </head>
 <body>
-    <h1>Tool check for Link # Character</h1>
+    <h1>Tool check for Link # and /# Characters</h1>
     
     <div class="form-container">
         <input type="text" id="urlInput" placeholder="Enter sitemap URL (e.g., https://example.com/sitemap_index.xml)" required>
@@ -247,6 +320,8 @@
         let pagesChecked = 0;
         let pagesWithHash = 0;
         let totalHashLinks = 0;
+        let headerHashLinks = new Map(); // Map to store unique header hash links
+        let footerHashLinks = new Map(); // Map to store unique footer hash links
         let isCancelled = false;
         
         document.getElementById('checkButton').addEventListener('click', async function() {
@@ -258,6 +333,8 @@
             pagesChecked = 0;
             pagesWithHash = 0;
             totalHashLinks = 0;
+            headerHashLinks.clear(); // Clear header hash links
+            footerHashLinks.clear(); // Clear footer hash links
             isCancelled = false;
             
             const loading = document.getElementById('loading');
@@ -333,7 +410,20 @@
                     // Create container for pages with hash links
                     const pagesContainer = document.createElement('div');
                     pagesContainer.className = 'pages-container';
+                    pagesContainer.innerHTML = '<h3>Hash Links in Regular Content</h3>';
                     resultsDiv.appendChild(pagesContainer);
+                    
+                    // Create container for header links
+                    const headerLinksContainer = document.createElement('div');
+                    headerLinksContainer.className = 'header-links-container';
+                    headerLinksContainer.innerHTML = '<h3>Hash Links in Headers (Across All Pages)</h3>';
+                    resultsDiv.appendChild(headerLinksContainer);
+                    
+                    // Create container for footer links
+                    const footerLinksContainer = document.createElement('div');
+                    footerLinksContainer.className = 'footer-links-container';
+                    footerLinksContainer.innerHTML = '<h3>Hash Links in Footers (Across All Pages)</h3>';
+                    resultsDiv.appendChild(footerLinksContainer);
                     
                     // Process pages in batches to avoid overwhelming the server
                     const batchSize = 5;
@@ -347,6 +437,59 @@
                         for (const result of batchResults) {
                             pagesChecked++;
                             
+                            // Process header hash links first
+                            if (result.success && result.hasHeaderHashLinks) {
+                                // Add unique header links to the global map - use only TEXT as the key
+                                result.headerHashLinks.forEach(link => {
+                                    const linkKey = `${link.text}`; // Only use text for header links
+                                    if (!headerHashLinks.has(linkKey)) {
+                                        headerHashLinks.set(linkKey, {
+                                            text: link.text,
+                                            href: link.href,
+                                            context: link.context,
+                                            headerType: link.headerType,
+                                            urls: [result.url]
+                                        });
+                                    } else {
+                                        // Add this URL to existing link's URLs if not already there
+                                        const existingLink = headerHashLinks.get(linkKey);
+                                        if (!existingLink.urls.includes(result.url)) {
+                                            existingLink.urls.push(result.url);
+                                        }
+                                    }
+                                });
+                                
+                                // Update header links display
+                                updateHeaderLinksDisplay(headerLinksContainer);
+                            }
+                            
+                            // Process footer hash links
+                            if (result.success && result.hasFooterHashLinks) {
+                                // Add unique footer links to the global map
+                                result.footerHashLinks.forEach(link => {
+                                    const linkKey = `${link.text}-${link.href}-${link.footerType}`;
+                                    if (!footerHashLinks.has(linkKey)) {
+                                        footerHashLinks.set(linkKey, {
+                                            text: link.text,
+                                            href: link.href,
+                                            context: link.context,
+                                            footerType: link.footerType,
+                                            urls: [result.url]
+                                        });
+                                    } else {
+                                        // Add this URL to existing link's URLs if not already there
+                                        const existingLink = footerHashLinks.get(linkKey);
+                                        if (!existingLink.urls.includes(result.url)) {
+                                            existingLink.urls.push(result.url);
+                                        }
+                                    }
+                                });
+                                
+                                // Update footer links display
+                                updateFooterLinksDisplay(footerLinksContainer);
+                            }
+                            
+                            // Process regular hash links
                             if (result.success && result.hasHashLinks) {
                                 pagesWithHash++;
                                 totalHashLinks += result.hashLinks.length;
@@ -359,7 +502,7 @@
                                 result.hashLinks.forEach(link => {
                                     hashLinksHtml += `
                                         <div class="result-item has-hash">
-                                            <strong>Link Text:</strong> ${link.text}<br>
+                                            <strong>Link Text:</strong> ${formatPipeSeparatedText(link.text)}<br>
                                             <strong>HREF:</strong> ${link.href}<br>
                                             <strong>Context:</strong> ${link.context || 'No context available'}
                                         </div>
@@ -388,6 +531,14 @@
                         }
                     }
                     
+                    // After processing all pages, check if we found any links in regular pages
+                    if (pagesWithHash === 0) {
+                        const noRegularLinks = document.createElement('p');
+                        noRegularLinks.className = 'no-links-notice';
+                        noRegularLinks.innerHTML = '<strong>No hash links (#, /#) were found in regular page content.</strong>';
+                        pagesContainer.appendChild(noRegularLinks);
+                    }
+                    
                     // Show final summary
                     showFinalSummary();
                     
@@ -405,7 +556,20 @@
                     // Create container for pages with hash links
                     const pagesContainer = document.createElement('div');
                     pagesContainer.className = 'pages-container';
+                    pagesContainer.innerHTML = '<h3>Hash Links in Regular Content</h3>';
                     resultsDiv.appendChild(pagesContainer);
+                    
+                    // Create container for header links
+                    const headerLinksContainer = document.createElement('div');
+                    headerLinksContainer.className = 'header-links-container';
+                    headerLinksContainer.innerHTML = '<h3>Hash Links in Headers (Across All Pages)</h3>';
+                    resultsDiv.appendChild(headerLinksContainer);
+                    
+                    // Create container for footer links
+                    const footerLinksContainer = document.createElement('div');
+                    footerLinksContainer.className = 'footer-links-container';
+                    footerLinksContainer.innerHTML = '<h3>Hash Links in Footers (Across All Pages)</h3>';
+                    resultsDiv.appendChild(footerLinksContainer);
                     
                     // Process pages in batches
                     const batchSize = 5;
@@ -419,6 +583,59 @@
                         for (const result of batchResults) {
                             pagesChecked++;
                             
+                            // Process header hash links first
+                            if (result.success && result.hasHeaderHashLinks) {
+                                // Add unique header links to the global map - use only TEXT as the key
+                                result.headerHashLinks.forEach(link => {
+                                    const linkKey = `${link.text}`; // Only use text for header links
+                                    if (!headerHashLinks.has(linkKey)) {
+                                        headerHashLinks.set(linkKey, {
+                                            text: link.text,
+                                            href: link.href,
+                                            context: link.context,
+                                            headerType: link.headerType,
+                                            urls: [result.url]
+                                        });
+                                    } else {
+                                        // Add this URL to existing link's URLs if not already there
+                                        const existingLink = headerHashLinks.get(linkKey);
+                                        if (!existingLink.urls.includes(result.url)) {
+                                            existingLink.urls.push(result.url);
+                                        }
+                                    }
+                                });
+                                
+                                // Update header links display
+                                updateHeaderLinksDisplay(headerLinksContainer);
+                            }
+                            
+                            // Process footer hash links
+                            if (result.success && result.hasFooterHashLinks) {
+                                // Add unique footer links to the global map
+                                result.footerHashLinks.forEach(link => {
+                                    const linkKey = `${link.text}-${link.href}-${link.footerType}`;
+                                    if (!footerHashLinks.has(linkKey)) {
+                                        footerHashLinks.set(linkKey, {
+                                            text: link.text,
+                                            href: link.href,
+                                            context: link.context,
+                                            footerType: link.footerType,
+                                            urls: [result.url]
+                                        });
+                                    } else {
+                                        // Add this URL to existing link's URLs if not already there
+                                        const existingLink = footerHashLinks.get(linkKey);
+                                        if (!existingLink.urls.includes(result.url)) {
+                                            existingLink.urls.push(result.url);
+                                        }
+                                    }
+                                });
+                                
+                                // Update footer links display
+                                updateFooterLinksDisplay(footerLinksContainer);
+                            }
+                            
+                            // Process regular hash links
                             if (result.success && result.hasHashLinks) {
                                 pagesWithHash++;
                                 totalHashLinks += result.hashLinks.length;
@@ -431,7 +648,7 @@
                                 result.hashLinks.forEach(link => {
                                     hashLinksHtml += `
                                         <div class="result-item has-hash">
-                                            <strong>Link Text:</strong> ${link.text}<br>
+                                            <strong>Link Text:</strong> ${formatPipeSeparatedText(link.text)}<br>
                                             <strong>HREF:</strong> ${link.href}<br>
                                             <strong>Context:</strong> ${link.context || 'No context available'}
                                         </div>
@@ -458,6 +675,14 @@
                             // Update live summary
                             updateLiveSummary();
                         }
+                    }
+                    
+                    // After processing all pages, check if we found any links in regular pages
+                    if (pagesWithHash === 0) {
+                        const noRegularLinks = document.createElement('p');
+                        noRegularLinks.className = 'no-links-notice';
+                        noRegularLinks.innerHTML = '<strong>No hash links (#, /#) were found in regular page content.</strong>';
+                        pagesContainer.appendChild(noRegularLinks);
                     }
                     
                     // Show final summary
@@ -585,7 +810,11 @@
                     url: url,
                     error: error.message,
                     hasHashLinks: false,
-                    hashLinks: []
+                    hashLinks: [],
+                    hasHeaderHashLinks: false,
+                    headerHashLinks: [],
+                    hasFooterHashLinks: false,
+                    footerHashLinks: []
                 };
             }
         }
@@ -617,6 +846,118 @@
             
         }
         
+        // Function to format pipe-separated text with styled separators
+        function formatPipeSeparatedText(text) {
+            if (!text.includes(' | ')) {
+                return text;
+            }
+            
+            const parts = text.split(' | ');
+            let formattedText = '<div class="link-text-parts">';
+            
+            parts.forEach((part, index) => {
+                formattedText += `<span class="link-text-part">${part}</span>`;
+                if (index < parts.length - 1) {
+                    formattedText += '<span class="link-text-separator">|</span>';
+                }
+            });
+            
+            formattedText += '</div>';
+            return formattedText;
+        }
+        
+        // Function to update the header links display
+        function updateHeaderLinksDisplay(container) {
+            // Clear the container except for the title
+            const title = container.querySelector('h3');
+            container.innerHTML = '';
+            container.appendChild(title);
+            
+            // Add info about number of unique header links
+            const headerCount = document.createElement('p');
+            headerCount.innerHTML = `<strong>Found ${headerHashLinks.size} unique link texts in headers across all pages</strong>`;
+            container.appendChild(headerCount);
+            
+            // Display each unique header link
+            headerHashLinks.forEach((link, key) => {
+                const headerItem = document.createElement('div');
+                headerItem.className = 'header-page-item';
+                
+                let urlsList = '';
+                link.urls.forEach(url => {
+                    urlsList += `<li><a href="${url}" target="_blank">${url}</a></li>`;
+                });
+                
+                headerItem.innerHTML = `
+                    <strong>Text:</strong> ${formatPipeSeparatedText(link.text)}<br>
+                    <strong>HREF:</strong> ${link.href}<br>
+                    <strong>Header Type:</strong> ${link.headerType}<br>
+                    <strong>Context:</strong> ${link.context}<br>
+                    <strong>Found on ${link.urls.length} page(s):</strong>
+                    <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Pages</button>
+                    <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                        <ul>${urlsList}</ul>
+                    </div>
+                `;
+                
+                container.appendChild(headerItem);
+            });
+            
+            // If no header links found
+            if (headerHashLinks.size === 0) {
+                const noLinks = document.createElement('p');
+                noLinks.className = 'no-links-notice';
+                noLinks.innerHTML = '<strong>No hash links (#, /#) were found in any header elements.</strong>';
+                container.appendChild(noLinks);
+            }
+        }
+        
+        // Function to update the footer links display
+        function updateFooterLinksDisplay(container) {
+            // Clear the container except for the title
+            const title = container.querySelector('h3');
+            container.innerHTML = '';
+            container.appendChild(title);
+            
+            // Add info about number of unique footer links
+            const footerCount = document.createElement('p');
+            footerCount.innerHTML = `<strong>Found ${footerHashLinks.size} unique link texts in footers across all pages</strong>`;
+            container.appendChild(footerCount);
+            
+            // Display each unique footer link
+            footerHashLinks.forEach((link, key) => {
+                const footerItem = document.createElement('div');
+                footerItem.className = 'footer-page-item';
+                
+                let urlsList = '';
+                link.urls.forEach(url => {
+                    urlsList += `<li><a href="${url}" target="_blank">${url}</a></li>`;
+                });
+                
+                footerItem.innerHTML = `
+                    <strong>Text:</strong> ${formatPipeSeparatedText(link.text)}<br>
+                    <strong>HREF:</strong> ${link.href}<br>
+                    <strong>Footer Type:</strong> ${link.footerType}<br>
+                    <strong>Context:</strong> ${link.context}<br>
+                    <strong>Found on ${link.urls.length} page(s):</strong>
+                    <button class="collapse-btn" onclick="toggleHashLinks(this)">Show Pages</button>
+                    <div class="hash-links-section" style="height: 0px; padding: 0px;">
+                        <ul>${urlsList}</ul>
+                    </div>
+                `;
+                
+                container.appendChild(footerItem);
+            });
+            
+            // If no footer links found
+            if (footerHashLinks.size === 0) {
+                const noLinks = document.createElement('p');
+                noLinks.className = 'no-links-notice';
+                noLinks.innerHTML = '<strong>No hash links (#, /#) were found in any footer elements.</strong>';
+                container.appendChild(noLinks);
+            }
+        }
+        
         // Function to show the final summary
         function showFinalSummary() {
             const summaryDiv = document.getElementById('summary');
@@ -636,19 +977,19 @@
             const finalSummary = document.createElement('div');
             finalSummary.className = 'summary-box';
             
-            if (pagesWithHash > 0) {
+            if (pagesWithHash > 0 || headerHashLinks.size > 0 || footerHashLinks.size > 0) {
                 finalSummary.innerHTML = `
                     <p><strong>Total pages checked:</strong> ${pagesChecked}</p>
-                    <p><strong>Pages with href="#" links found:</strong> ${pagesWithHash}</p>
-                    <p><strong>Total href="#" links found:</strong> ${totalHashLinks}</p>
-                    <p>Links in headers, navigation menus, and navbar elements are automatically excluded.</p>
-                    <p>Scroll down to see pages with href="#" links.</p>
+                    <p><strong>Pages with href="#" or href="/#" links found (excluding headers/footers):</strong> ${pagesWithHash}</p>
+                    <p><strong>Total href="#" or href="/#" links found (excluding headers/footers):</strong> ${totalHashLinks}</p>
+                    <p><strong>Unique link texts found in headers:</strong> ${headerHashLinks.size}</p>
+                    <p><strong>Unique link texts found in footers:</strong> ${footerHashLinks.size}</p>
+                    <p>Scroll down to see the results.</p>
                 `;
             } else {
                 finalSummary.innerHTML = `
                     <p><strong>Total pages checked:</strong> ${pagesChecked}</p>
-                    <p><strong>No pages with href="#" links were found.</strong></p>
-                    <p>Note: Links in headers, navigation menus, and navbar elements are automatically excluded.</p>
+                    <p><strong>No hash links (#, /#) were found on any of the pages.</strong></p>
                 `;
             }
             
@@ -671,8 +1012,10 @@
             }
         }
         
-        // Make the toggle function available globally
+        // Make the functions available globally
         window.toggleHashLinks = toggleHashLinks;
+        window.updateHeaderLinksDisplay = updateHeaderLinksDisplay;
+        window.updateFooterLinksDisplay = updateFooterLinksDisplay;
     </script>
 </body>
 </html> 
