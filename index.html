@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Link # and /# Character Checker</title>
+    <!-- External libraries for export functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -361,6 +365,7 @@
             margin-bottom: 20px;
             border-radius: 5px;
             border-left: 4px solid #f44336;
+            display: none;
         }
         .broken-page-item {
             background-color: #fff;
@@ -392,6 +397,50 @@
             font-style: italic;
             color: #777;
         }
+        .export-container {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+            border-left: 4px solid #4CAF50;
+            max-width: 870px;
+            margin-left: auto;
+            margin-right: auto;
+            display: none;
+        }
+        .export-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .export-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.3s;
+        }
+        .export-btn:hover {
+            opacity: 0.9;
+        }
+        .excel-btn {
+            background-color: #217346;
+        }
+        .csv-btn {
+            background-color: #ff9800;
+        }
+        .export-btn img {
+            width: 20px;
+            height: 20px;
+        }
     </style>
 </head>
 <body>
@@ -402,13 +451,13 @@
         <button type="submit" id="checkButton">Process Now</button>
     </div>
 
-    <div class="toggle-container">
+    <!-- <div class="toggle-container">
         <label class="toggle-switch">
             <input type="checkbox" id="checkBrokenLinks">
             <span class="toggle-slider"></span>
         </label>
         <span class="toggle-label">Allow to check broken links (this will make scanning slower)</span>
-    </div>
+    </div> -->
 
     <div id="loading" class="loading">Processing, please wait... This may take a while for large sitemaps.</div>
     
@@ -419,6 +468,19 @@
     <div class="results">
         <div id="summary"></div>
         <div id="results"></div>
+    </div>
+    
+    <div class="export-container" id="exportContainer">
+        <h3>Export Results</h3>
+        <p>Download your hash links data in the following formats:</p>
+        <div class="export-buttons">
+            <button class="export-btn excel-btn" id="excelExportBtn">
+                <i class="fa-solid fa-file-excel"></i> Excel
+            </button>
+            <button class="export-btn csv-btn" id="csvExportBtn">
+                <i class="fa-solid fa-file-csv"></i> CSV
+            </button>
+        </div>
     </div>
 
     <script>
@@ -1127,6 +1189,9 @@
                     <p><strong>Unique link texts found in footers:</strong> ${footerHashLinks.size}</p>
                     <p>Scroll down to see the results.</p>
                 `;
+                
+                // Show export options when results are found
+                document.getElementById('exportContainer').style.display = 'block';
             } else {
                 finalSummary.innerHTML = `
                     <p><strong>Total pages checked:</strong> ${pagesChecked}</p>
@@ -1157,6 +1222,165 @@
         window.toggleHashLinks = toggleHashLinks;
         window.updateHeaderLinksDisplay = updateHeaderLinksDisplay;
         window.updateFooterLinksDisplay = updateFooterLinksDisplay;
+        
+        // Export Functions
+        
+        // Function to prepare data for export
+        function prepareExportData() {
+            const data = [];
+            
+            // Add header for regular hash links
+            if (document.querySelector('.pages-container') && document.querySelectorAll('.page-item.has-hash').length > 0) {
+                data.push({
+                    section: "Hash Links in Regular Content",
+                    links: []
+                });
+                
+                // Get data from regular hash links
+                document.querySelectorAll('.page-item.has-hash').forEach(item => {
+                    const url = item.querySelector('a')?.href || '';
+                    const hashLinksItems = item.querySelectorAll('.result-item.has-hash');
+                    
+                    hashLinksItems.forEach(hashLink => {
+                        const textElement = hashLink.innerHTML.match(/<strong>Link Text:<\/strong>(.*?)<br>/);
+                        const text = textElement ? cleanHtmlText(textElement[1]) : '';
+                        
+                        const hrefElement = hashLink.innerHTML.match(/<strong>HREF:<\/strong>(.*?)<br>/);
+                        const href = hrefElement ? hrefElement[1].trim() : '';
+                        
+                        data[data.length - 1].links.push({
+                            text: text,
+                            href: href,
+                            url: url
+                        });
+                    });
+                });
+            }
+            
+            // Add header links
+            if (headerHashLinks.size > 0) {
+                data.push({
+                    section: "Hash Links in Headers (Across All Pages)",
+                    links: []
+                });
+                
+                headerHashLinks.forEach((link, key) => {
+                    data[data.length - 1].links.push({
+                        text: link.text,
+                        href: link.href,
+                        url: link.urls[0] || '' // Use the first URL as example
+                    });
+                });
+            }
+            
+            // Add footer links
+            if (footerHashLinks.size > 0) {
+                data.push({
+                    section: "Hash Links in Footers (Across All Pages)",
+                    links: []
+                });
+                
+                footerHashLinks.forEach((link, key) => {
+                    data[data.length - 1].links.push({
+                        text: link.text,
+                        href: link.href,
+                        url: link.urls[0] || '' // Use the first URL as example
+                    });
+                });
+            }
+            
+            return data;
+        }
+        
+        // Helper function to clean HTML text
+        function cleanHtmlText(html) {
+            if (!html) return '';
+            
+            // Create a temporary div to extract text
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            
+            // Extract text content
+            let text = temp.textContent || temp.innerText || '';
+            
+            // Replace multiple spaces with a single space
+            text = text.replace(/\s+/g, ' ').trim();
+            
+            return text;
+        }
+        
+        // Function to export to Excel
+        document.getElementById('excelExportBtn').addEventListener('click', function() {
+            const data = prepareExportData();
+            if (data.length === 0) {
+                alert('No data to export.');
+                return;
+            }
+            
+            // Create workbook
+            const XLSX = window.XLSX;
+            const wb = XLSX.utils.book_new();
+            
+            // Process each section
+            data.forEach(section => {
+                // Convert the data to a worksheet
+                const ws_data = [
+                    ['Text', 'HREF', 'URL']
+                ];
+                
+                section.links.forEach(link => {
+                    ws_data.push([link.text, link.href, link.url]);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                
+                // Add the worksheet to the workbook
+                XLSX.utils.book_append_sheet(wb, ws, section.section.substring(0, 30));
+            });
+            
+            // Generate Excel file
+            XLSX.writeFile(wb, 'hash_links_report.xlsx');
+        });
+        
+        // Function to export to CSV
+        document.getElementById('csvExportBtn').addEventListener('click', function() {
+            const data = prepareExportData();
+            if (data.length === 0) {
+                alert('No data to export.');
+                return;
+            }
+            
+            let csvContent = '';
+            
+            // Process each section
+            data.forEach(section => {
+                // Add section header as a comment
+                csvContent += '# ' + section.section + '\r\n';
+                csvContent += 'Text,HREF,URL\r\n';
+                
+                section.links.forEach(link => {
+                    // Escape fields properly for CSV
+                    const escapedText = '"' + (link.text || '').replace(/"/g, '""') + '"';
+                    const escapedHref = '"' + (link.href || '').replace(/"/g, '""') + '"';
+                    const escapedUrl = '"' + (link.url || '').replace(/"/g, '""') + '"';
+                    
+                    csvContent += escapedText + ',' + escapedHref + ',' + escapedUrl + '\r\n';
+                });
+                
+                csvContent += '\r\n'; // Add space between sections
+            });
+            
+            // Generate and download the file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "hash_links_report.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
     </script>
 </body>
 </html> 
